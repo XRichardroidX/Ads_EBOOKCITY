@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:appwrite/appwrite.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:novelcity/pages/user_admin_communication/book_recommendation_page.dart';
+import 'package:novelcity/widget/snack_bar_message.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/app_write_constants.dart';
@@ -183,7 +185,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   style: TextStyle(color: AppColors.textPrimary, fontSize: 18),
                 ),
                 onTap: () {
-                  _launchEmail(receiverEmail: 'oguzieibehrichard@gmail.com'); // Call the function to launch email
+                  _launchEmail(receiverEmail: 'needlinkcustomerservice@gmail.com'); // Call the function to launch email
                 },
               ),
               Divider(),
@@ -246,25 +248,78 @@ class _SettingsPageState extends State<SettingsPage> {
 
 
 
-
-
   void _launchEmail({required String receiverEmail}) async {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: receiverEmail, // Receiver's email
+      path: receiverEmail,
       query: encodeQueryParameters({
-        'subject': 'Novel City User', // Subject
-        'body': 'Please enter your message here.', // Default body text
+        'subject': 'Novel City User',
+        'body': 'Please enter your message here.',
       }),
     );
 
-    // Launch the email client
-    if (await canLaunch(emailLaunchUri.toString())) {
-      await launch(emailLaunchUri.toString());
-    } else {
-      throw 'Could not launch $emailLaunchUri';
+    try {
+      // Launch the email client
+      if (await canLaunchUrl(emailLaunchUri)) {
+        await launchUrl(emailLaunchUri);
+      } else {
+        showCustomSnackbar(context, 'Email Linking', 'Email client not found on this device', AppColors.warning);
+
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppColors.backgroundSecondary,
+            title: Text(
+              'Email Client Not Found',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'You can reach us on \n $receiverEmail',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.copy, color: AppColors.textHighlight),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: receiverEmail));
+                        showCustomSnackbar(context, 'Copy', 'Email copied to clipboard', AppColors.success);
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'OK',
+                  style: TextStyle(color: AppColors.textHighlight, fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        throw 'Email client not found on this device';
+      }
+    } catch (e) {
+      // Handle exception by showing a message to the user
+      print('Could not launch email client: $e');
+      showCustomSnackbar(context, 'Linking Email', '$e', AppColors.error);
     }
   }
+
+
+
 
   String? encodeQueryParameters(Map<String, String> params) {
     return params.entries
@@ -272,8 +327,6 @@ class _SettingsPageState extends State<SettingsPage> {
     '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
         .join('&');
   }
-
-
 
 
 
