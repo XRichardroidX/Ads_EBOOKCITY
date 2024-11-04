@@ -19,7 +19,6 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String userName = '';
   String userEmail = '';
-  DateTime? endSub; // Changed to DateTime type
   bool isLoading = true;
   String userId = '';
 
@@ -60,10 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {
         userName = cachedUserName;
         userEmail = cachedUserEmail;
-        String? endSubString = prefs.getString('$userId+endSub');
-        if (endSubString != null) {
-          endSub = DateTime.tryParse(endSubString); // Safely parse string to DateTime
-        }
+
         isLoading = false;
       });
     } else {
@@ -81,10 +77,6 @@ class _SettingsPageState extends State<SettingsPage> {
           setState(() {
             userName = userDetails['userName'] ?? '';
             userEmail = userDetails['email'] ?? '';
-            String? endSubString = prefs.getString('$userId+endSub');
-            if (endSubString != null) {
-              endSub = DateTime.tryParse(endSubString);
-            }
             isLoading = false;
           });
         } else {
@@ -132,10 +124,6 @@ class _SettingsPageState extends State<SettingsPage> {
     return null;
   }
 
-  bool isSubscriptionActive() {
-    return endSub != null && DateTime.now().isBefore(endSub!); // Check if endSub is not null
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,35 +161,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   fontSize: 18,
                   color: AppColors.textSecondary,
                 ),
-              ),
-              SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    isSubscriptionActive() ? "Subscription Active" : "Subscription Inactive",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: isSubscriptionActive() ? AppColors.success : AppColors.textHighlight,
-                    ),
-                  ),
-                  if (!isSubscriptionActive())
-                    ElevatedButton(
-                      onPressed: () {
-                        context.push('/subscription'); // Navigate to subscription page
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.success, // Button color
-                      ),
-                      child: Text(
-                        "Subscribe",
-                        style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textHighlight
-                        ),
-                      ),
-                    ),
-                ],
               ),
               SizedBox(height: 32),
               Divider(),
